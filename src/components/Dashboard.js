@@ -26,8 +26,6 @@ function Dashboard(props) {
         console.log('clicked signout');
         try {
             const user = await Auth.signOut();
-            console.log('SignOut Success');
-            console.log(user);
         } catch (error) {
             console.log('error signing out: ', error);
         }
