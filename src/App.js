@@ -1,6 +1,7 @@
 import './App.css';
-import React from 'react'
-import Amplify, { Auth } from 'aws-amplify';
+import React, { useState } from 'react'
+import Amplify, {Auth} from 'aws-amplify';
+import { Navigate } from 'react-router-dom';
 
 Amplify.configure({
   Auth: {
@@ -22,108 +23,100 @@ Amplify.configure({
   }
 });
 
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      isVerifyStep: false,
-    };
+function App(props) {
+  const [isVerifyStep, setIsVerifyStep] = useState(false);
+  const [userLoggedIn, setUserLoggedIn] = useState(false);
+  const [verifyCode, setVerifyCode] = useState("");
+  const [userFormFields, setUserFormFields] = useState({
+    email: "",
+    password: "",
+  });
 
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-    this.handleVerifyCode = this.handleVerifyCode.bind(this);
-    this.signUp = this.signUp.bind(this);
+  function handleChange(event) {
+    setUserFormFields({...userFormFields, [event.target.name]: event.target.value});
   }
 
-  handleChange(event) {
-    this.setState({
-      [event.target.name]: event.target.value
-    });
-  }
-
-  async signUp(event) {
+  async function handleLogIn(event) {
     event.preventDefault();
-    const password = this.state.password;
-    const email = this.state.email;
-    console.log(`password ${password}  email: ${email}`);
+    const password = userFormFields.password;
+    const email = userFormFields.email;
+    try {
+      const user = await Auth.signIn(email, password);
+      setUserLoggedIn(true);
+    } catch (error) {
+      console.log('error signing in', error);
+    }
+  }
+
+  async function handleSignUp(event) {
+    event.preventDefault();
+    const password = userFormFields.password;
+    const email = userFormFields.email;
     try {
       const { user } = await Auth.signUp({
         username: email,
         password,
         attributes: {
           email: email,
-          family_name: 'foobar',
-          'custom:tenant_id': '1234567890',
-          'custom:created_at': '2022-01-01',
-          'custom:employee_id': '10',
-          'custom:is_admin': false,
+          // family_name: 'foobar',
+          // 'custom:tenant_id': '1234567890',
+          // 'custom:created_at': '2022-01-01',
+          // 'custom:employee_id': '10',
+          // 'custom:is_admin': false,
         },
       });
-      console.log(user);
-      this.setState({
-        isVerifyStep: true
-      });
+      setIsVerifyStep(true);
     } catch (error) {
       console.log('error signing up:', error);
     }
   }
 
-  handleSubmit(event) {
-    console.log(this.state);
-    const password = this.state.password;
-    const email = this.state.email;
-    console.log(`password ${password}  email: ${email}`);
-
+  async function handleVerifyCode(event) {
     event.preventDefault();
+    const email = userFormFields.email;
+    const result = await Auth.confirmSignUp(email, verifyCode);
   }
 
-  async handleVerifyCode(event) {
-    event.preventDefault();
-    console.log(this.state);
-    const email = this.state.email;
-    const verifyCode = this.state.verifyCode;
-    const result = await Auth.confirmSignUp(this.state.email, verifyCode);
-
-    console.log('printing confirm result');
-    console.log(result);
+  if (userLoggedIn) {
+    return <Navigate to="/dashboard" replace={true} />
   }
 
-  render() {
-    return (
-        <div className="container">
-          {!this.state.isVerifyStep ?
+  return (
+      <div className="container">
+        {!isVerifyStep ?
             <form>
-              <h1>Registration Form</h1>
+              <h1>Signup</h1>
               <div className="ui divider"></div>
               <div className="ui form">
                 <div className="field">
                   <label>Email</label>
-                  <input type="text" value={this.state.email} onChange={this.handleChange} name="email"
-                         placeholder="Email"/>
+                  <input type="text" value={userFormFields.email} onChange={handleChange} name="email" placeholder="Email"/>
                 </div>
 
                 <div className="field">
                   <label>Password</label>
-                  <input type="password" value={this.state.password} onChange={this.handleChange} name="password"
-                         placeholder="Password"/>
+                  <input type="password" value={userFormFields.password} onChange={handleChange} name="password" placeholder="Password"/>
                 </div>
-                <button onClick={this.signUp} className="fluid ui button blue">Submit</button>
+                <button onClick={handleSignUp} className="fluid ui button blue">Submit</button>
+              </div>
+              <div className="ui divider"></div>
+              <div>
+                <button onClick={handleLogIn} className="fluid ui button blue">Log In</button>
               </div>
             </form>
-              :
-              <form>
-                <div className="ui form">
-                  <div className="field">
-                    <label>Verify Code</label>
-                    <input type="text" value={this.state.verifyCode} onChange={this.handleChange} name="verifyCode" placeholder="code"/>
-                  </div>
-                  <button onClick={this.handleVerifyCode} className="fluid ui button blue">Submit</button>
+            :
+            <form>
+              <div className="ui form">
+                <div className="field">
+                  <label>Verify Code</label>
+                  <input type="text" value={verifyCode} onChange={e => setVerifyCode(e.target.value)} name="verifyCode" placeholder="code"/>
                 </div>
-              </form>
-          }
-        </div>
-    );
-  }
+                <button onClick={handleVerifyCode} className="fluid ui button blue">Submit</button>
+              </div>
+            </form>
+        }
+      </div>
+  );
 }
 
 export default App;

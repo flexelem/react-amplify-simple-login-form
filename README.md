@@ -1,6 +1,13 @@
 # Basic Signup Form Using Amplify
-This is just a simple signup form getting email and password. There are attributes hard coded
-as well. Amplify makes signup and verify calls to cognito.
+A simple reactjs projects which contains;
+- Signup
+- VerifyCode
+- Login
+
+After a user login, dashboard page will open. If user tries to open dashboard page without authenticated then she will be
+redirected to home page.
+
+Again this is just a super simple demo project to illustrate some basic features for Amplify.
 
 ## Install Dependencies
 > npm install
