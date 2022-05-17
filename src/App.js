@@ -74,7 +74,12 @@ function App(props) {
   async function handleVerifyCode(event) {
     event.preventDefault();
     const email = userFormFields.email;
-    const result = await Auth.confirmSignUp(email, verifyCode);
+    try {
+      const result = await Auth.confirmSignUp(email, verifyCode);
+      setIsVerifyStep(false);
+    } catch (error) {
+      console.log('error at verify code step');
+    }
   }
 
   if (userLoggedIn) {
