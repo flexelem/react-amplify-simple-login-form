@@ -23,7 +23,6 @@ function Dashboard(props) {
 
     async function handleSignOut(event) {
         event.preventDefault();
-        console.log('clicked signout');
         try {
             const user = await Auth.signOut();
         } catch (error) {
